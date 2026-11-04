@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Таблица умножения</title>
+<style>
+@font-face { font-family: "Neucha"; src: url("Neucha.ttf") format("truetype"); }
+
+:root {
+  --paper: #fbfdff;
+  --grid: #cfe0f5;
+  --ink: #1f3a93;
+  --ink-soft: #5a6fb3;
+  --red: #e2454b;
+  --green: #1f9d5a;
+  --cell: 28px;
+  --hand: "Neucha", "Comic Sans MS", cursive;
+  --sans: system-ui, Roboto, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body { margin: 0; height: 100%; }
+
+body {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: var(--cell) var(--cell);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.45;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+main {
+  max-width: 560px;
+  margin: 0 auto;
+  min-height: 100%;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)) 44px;
+  border-left: 2px solid rgba(226, 69, 75, .55);
+}
+
+h1, h2, .hand { font-family: var(--hand); font-weight: normal; }
+
+h1 { font-size: 40px; line-height: 1.1; margin: 8px 0 4px; }
+h2 { font-size: 28px; margin: 28px 0 8px; }
+
+button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--ink-soft); outline-offset: 2px; }
+
+.lead { color: var(--ink-soft); margin: 0 0 20px; }
+
+.numbers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.num {
+  aspect-ratio: 1;
+  border: 2.5px solid var(--ink);
+  border-radius: 6px 10px 7px 12px;
+  background: rgba(255, 255, 255, .85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: transform .12s;
+}
+.num:active { transform: scale(.95); }
+.num .digit { font-family: var(--hand); font-size: 64px; line-height: 1; }
+.num .stars { font-size: 15px; letter-spacing: 2px; min-height: 20px; color: #f2b400; }
+.num .stars .off { color: var(--grid); }
+
+.mixed {
+  width: 100%;
+  margin-top: 18px;
+  padding: 16px;
+  border: 2.5px dashed var(--ink);
+  border-radius: 8px;
+  font-family: var(--hand);
+  font-size: 26px;
+  background: rgba(255, 255, 255, .85);
+}
+
+.topbar { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.back { font-size: 30px; width: 44px; height: 44px; margin-left: -10px; font-family: var(--hand); }
+.topbar h1 { margin: 0; }
+
+
+
+.tip {
+  background: rgba(255, 255, 255, .9);
+  border-left: 5px solid var(--ink);
+  padding: 12px 14px;
+  margin: 12px 0;
+  border-radius: 0 8px 8px 0;
+}
+.tip b { display: block; font-size: 18px; }
+.tip .ex { font-family: var(--hand); font-size: 24px; margin-top: 4px; }
+
+.memo { border-left-color: var(--red); }
+.memo b { color: var(--red); }
+
+.rows { margin-top: 6px; }
+.row {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--grid);
+}
+.row .how { display: none; padding: 2px 0 6px; }
+.row[aria-expanded="true"] .how { display: block; }
+.tip.big { border-left-width: 7px; }
+.tip.big b { font-size: 21px; }
+.tip.big .ex { font-size: 30px; }
+.tip.memo .fact { font-family: var(--hand); font-size: 30px; font-weight: normal; }
+.more { margin: 14px 0 0; }
+.more summary { font-family: var(--hand); font-size: 24px; padding: 8px 0; cursor: pointer; }
+.row .fact { font-family: var(--hand); font-size: 26px; white-space: nowrap; }
+.row .how { color: var(--ink-soft); font-size: 15px; }
+
+.progress { display: flex; gap: 5px; margin: 10px 0 0; }
+.progress i { flex: 1; height: 6px; border-radius: 3px; background: var(--grid); }
+.progress i.ok { background: var(--green); }
+.progress i.bad { background: var(--red); }
+.progress i.now { background: var(--ink); }
+
+.question {
+  font-family: var(--hand);
+  font-size: 68px;
+  text-align: center;
+  margin: 26px 0 6px;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.answer {
+  display: inline-block;
+  min-width: 1.6em;
+  border-bottom: 4px solid var(--ink);
+  text-align: center;
+}
+.answer.empty { color: var(--grid); }
+.answer.right { color: var(--green); border-color: var(--green); }
+.answer.wrong { color: var(--red); border-color: var(--red); text-decoration: line-through; }
+
+.feedback { min-height: 64px; text-align: center; font-family: var(--hand); font-size: 26px; }
+.feedback .fix { color: var(--red); }
+.feedback .yay { color: var(--green); }
+
+.hint {
+  background: rgba(255, 255, 255, .95);
+  border: 2px dashed var(--ink-soft);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 0 0 12px;
+}
+.hint b { display: block; }
+.hint .step { font-family: var(--hand); font-size: 24px; }
+.rhyme { font-family: var(--hand); font-size: 22px; color: var(--red); margin: 4px 0; }
+.pic { display: block; width: 100%; max-width: 320px; height: auto; margin: 10px auto 2px; }
+.tip.memo .pic { max-width: 220px; }
+
+.pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
+.key {
+  height: 62px;
+  font-family: var(--hand);
+  font-size: 34px;
+  border: 2.5px solid var(--ink);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .92);
+}
+.key:active { background: var(--grid); }
+.key.go { background: var(--ink); color: var(--paper); }
+.key.go:disabled { opacity: .35; }
+
+.actions { display: flex; gap: 10px; margin-top: 12px; }
+.btn {
+  flex: 1;
+  padding: 14px;
+  font-family: var(--hand);
+  font-size: 24px;
+  border: 2.5px solid var(--ink);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .92);
+}
+.btn.main { background: var(--ink); color: var(--paper); }
+
+.result { text-align: center; padding-top: 30px; }
+.result .score { font-family: var(--hand); font-size: 84px; line-height: 1; }
+.result .bigstars { font-size: 44px; color: #f2b400; letter-spacing: 6px; margin: 10px 0; }
+.result .bigstars .off { color: var(--grid); }
+.mistakes { text-align: left; margin: 18px 0; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+@media (max-width: 360px) { .question { font-size: 54px; } .num .digit { font-size: 52px; } }
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+"use strict";
+
+const TABLES = {
+  1: {
+    tips: [["Умножить на 1 — число не меняется", "1 × 7 = 7"]],
+  },
+  2: {
+    tips: [
+      ["Удвой: сложи число с самим собой", "2 × 8 = 8 + 8 = 16"],
+      ["Ответ всегда чётный", "2, 4, 6, 8, 10, 12…"],
+    ],
+  },
+  3: {
+    tips: [
+      ["Удвой и прибавь ещё одно", "3 × 7 = 7 + 7 + 7 = 14 + 7 = 21"],
+      ["Проверка: сумма цифр ответа делится на 3", "27 → 2 + 7 = 9"],
+    ],
+  },
+  4: {
+    tips: [
+      ["Удвой два раза", "4 × 7: 7 → 14 → 28"],
+      ["Ответ всегда чётный", "4, 8, 12, 16, 20…"],
+    ],
+  },
+  5: {
+    tips: [
+      ["Умножь на 10 и раздели пополам", "5 × 8 = 80 : 2 = 40"],
+      ["Ответ кончается на 0 или на 5", "чётное число → на 0, нечётное → на 5"],
+    ],
+  },
+  6: {
+    tips: [
+      ["Умножь на 5 и прибавь ещё одно", "6 × 7 = 35 + 7 = 42"],
+      ["Чётное число: десятки — половина числа, единицы — само число", "6 × 8 = 48 (4 — половина от 8)"],
+    ],
+  },
+  7: {
+    tips: [
+      ["Раздели 7 на 5 и 2", "7 × 6 = 30 + 12 = 42"],
+      ["До 7 × 5 переставляй — это ты уже знаешь", "7 × 4 = 4 × 7 = 28"],
+    ],
+  },
+  8: {
+    tips: [
+      ["Удвой три раза", "8 × 6: 6 → 12 → 24 → 48"],
+      ["Или умножь на 10 и отними два раза", "8 × 7 = 70 − 14 = 56"],
+    ],
+  },
+  9: {
+    tips: [
+      ["Умножь на 10 и отними одно", "9 × 8 = 80 − 8 = 72"],
+      ["Десятков на один меньше, чем число", "9 × 7 → 6 десятков → 63"],
+      ["Сумма цифр ответа всегда 9", "72 → 7 + 2 = 9"],
+      ["Фокус на пальцах", "Положи 10 пальцев, загни палец с номером числа: слева — десятки, справа — единицы"],
+    ],
+  },
+};
+
+const INK = "#1f3a93", RED = "#e2454b", SOFT = "#cfe0f5", PAPER = "#fbfdff";
+const svg = (w, h, body) => `<svg class="pic" viewBox="0 0 ${w} ${h}" role="img">${body}</svg>`;
+const txt = (x, y, s, size = 16, fill = INK, anchor = "middle") =>
+  `<text x="${x}" y="${y}" font-family="Neucha, cursive" font-size="${size}" fill="${fill}" text-anchor="${anchor}">${s}</text>`;
+
+const PIC = {
+  chess() {
+    let b = "";
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++)
+      b += `<rect x="${10 + c * 24}" y="${10 + r * 24}" width="24" height="24" fill="${(r + c) % 2 ? INK : PAPER}"/>`;
+    b += `<rect x="10" y="10" width="192" height="192" fill="none" stroke="${INK}" stroke-width="2"/>`;
+    return svg(212, 236, b + txt(106, 228, "8 рядов по 8 клеток"));
+  },
+  calendar(weeks, label) {
+    const days = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+    let b = days.map((d, i) => txt(26 + i * 30, 20, d, 13, i > 4 ? RED : INK)).join("");
+    for (let w = 0; w < weeks; w++) for (let d = 0; d < 7; d++) {
+      const n = w * 7 + d + 1;
+      b += `<rect x="${12 + d * 30}" y="${28 + w * 26}" width="28" height="24" rx="3" fill="#fff" stroke="${SOFT}"/>`;
+      b += txt(26 + d * 30, 45 + w * 26, n, 14, d > 4 ? RED : INK);
+    }
+    const h = 28 + weeks * 26;
+    return svg(234, h + 26, b + txt(117, h + 20, label));
+  },
+  eggs() {
+    let b = "";
+    for (let box = 0; box < 6; box++) {
+      const bx = 8 + (box % 3) * 74, by = 8 + Math.floor(box / 3) * 56;
+      b += `<rect x="${bx}" y="${by}" width="68" height="48" rx="8" fill="#e8d9bf" stroke="#b89a6a"/>`;
+      for (let e = 0; e < 6; e++)
+        b += `<ellipse cx="${bx + 13 + (e % 3) * 21}" cy="${by + 14 + Math.floor(e / 3) * 20}" rx="8" ry="9" fill="#fff" stroke="#c9b48c"/>`;
+    }
+    return svg(238, 148, b + txt(119, 140, "6 коробок по 6 яиц"));
+  },
+  spiders() {
+    let b = "";
+    for (let s = 0; s < 3; s++) {
+      const cx = 42 + s * 76, cy = 46;
+      for (let l = 0; l < 4; l++) {
+        const y = cy - 15 + l * 10;
+        b += `<path d="M${cx},${cy} L${cx - 18},${y - 6} L${cx - 30},${y + 6}" fill="none" stroke="${INK}" stroke-width="2.5" stroke-linecap="round"/>`;
+        b += `<path d="M${cx},${cy} L${cx + 18},${y - 6} L${cx + 30},${y + 6}" fill="none" stroke="${INK}" stroke-width="2.5" stroke-linecap="round"/>`;
+      }
+      b += `<circle cx="${cx}" cy="${cy}" r="12" fill="${INK}"/><circle cx="${cx - 4}" cy="${cy - 3}" r="2.5" fill="#fff"/><circle cx="${cx + 4}" cy="${cy - 3}" r="2.5" fill="#fff"/>`;
+    }
+    return svg(236, 108, b + txt(118, 100, "3 паука, у каждого 8 лап"));
+  },
+  clock() {
+    const cx = 100, cy = 92, R = 76;
+    const colors = ["#dfe9f8", "#fbe0e1", "#dfe9f8", "#fbe0e1"];
+    let b = "";
+    for (let q = 0; q < 4; q++) {
+      const a0 = (q * 90 - 90) * Math.PI / 180, a1 = ((q + 1) * 90 - 90) * Math.PI / 180;
+      b += `<path d="M${cx},${cy} L${cx + R * Math.cos(a0)},${cy + R * Math.sin(a0)} A${R},${R} 0 0 1 ${cx + R * Math.cos(a1)},${cy + R * Math.sin(a1)} Z" fill="${colors[q]}"/>`;
+    }
+    b += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${INK}" stroke-width="3"/>`;
+    for (let h = 1; h <= 12; h++) {
+      const a = (h * 30 - 90) * Math.PI / 180;
+      b += txt(cx + 60 * Math.cos(a), cy + 60 * Math.sin(a) + 6, h, h % 3 ? 15 : 20, h % 3 ? INK : RED);
+    }
+    return svg(200, 200, b + txt(100, 192, "4 части по 3 часа"));
+  },
+  kittens() {
+    const row = "🐱 🐾🐾🐾🐾";
+    let b = "";
+    for (let i = 0; i < 4; i++) b += `<text x="10" y="${30 + i * 34}" font-size="24">${row}</text>`;
+    return svg(200, 166, b + txt(100, 160, "4 котёнка, у каждого 4 лапки"));
+  },
+};
+
+function dots(t, k, showTotal) {
+  const D = 20, rows = t === 9 ? 10 : t === 5 ? 10 : t;
+  const groups = { 2: [1, 1], 3: [2, 1], 4: [2, 2], 5: [5], 6: [5, 1], 7: [5, 2], 8: [4, 4], 9: [9, 1] }[t] || [t];
+  const colors = [INK, RED];
+  let b = "", row = 0, labels = [];
+  groups.forEach((g, gi) => {
+    const crossed = t === 9 && gi === 1;
+    for (let r = 0; r < g; r++, row++)
+      for (let c = 0; c < k; c++)
+        b += `<circle cx="${14 + c * D}" cy="${14 + row * D}" r="7" fill="${crossed ? "none" : colors[gi % 2]}" stroke="${colors[gi % 2]}" stroke-width="${crossed ? 1.5 : 0}"/>`;
+    if (crossed) b += `<line x1="4" y1="${14 + (row - 1) * D}" x2="${24 + (k - 1) * D}" y2="${14 + (row - 1) * D}" stroke="${RED}" stroke-width="3"/>`;
+    labels.push({ y: 14 + (row - g / 2) * D + 5, s: crossed ? `− ${k}` : `${g} × ${k} = ${g * k}`, color: colors[gi % 2] });
+  });
+  if (t === 5) {
+    for (let r = 0; r < 5; r++, row++)
+      for (let c = 0; c < k; c++) b += `<circle cx="${14 + c * D}" cy="${14 + row * D}" r="7" fill="none" stroke="${SOFT}" stroke-width="1.5"/>`;
+    labels = [{ y: 14 + 2 * D + 5, s: `половина от ${10 * k}`, color: INK }];
+  }
+  if (t === 9) labels[0].s = `10 × ${k} = ${10 * k}`;
+  const lx = 22 + k * D;
+  b += labels.map((l) => txt(lx, l.y, l.s, 17, l.color, "start")).join("");
+  const h = 14 + rows * D;
+  b += txt(lx, h + 24, `всего: ${showTotal ? t * k : "?"}`, 19, INK, "start");
+  return svg(lx + 120, h + 32, b);
+}
+
+const MEMO = {
+  "3x4": { rhyme: "Раз, два, три, четыре — двенадцать: 12 = 3 × 4", note: "На часах 4 части по 3 часа — всего 12", pic: () => PIC.clock() },
+  "4x4": { rhyme: "Четыре на четыре — шестнадцать", note: "4 котёнка, у каждого 4 лапки — 16 лапок", pic: () => PIC.kittens() },
+  "6x6": { rhyme: "Шестью шесть — тридцать шесть, сели кошки рыбку есть", note: "6 коробок по 6 яиц — 36 яиц", pic: () => PIC.eggs() },
+  "6x7": { rhyme: "Шестью семь — сорок два, закружилась голова", note: "Самый трудный в столбике — повторяй его чаще", pic: (s) => dots(7, 6, s) },
+  "6x8": { rhyme: "Шестью восемь — сорок восемь, листья жёлтые — уж осень", note: "Десятки — половина от 8, единицы — само 8", pic: (s) => dots(6, 8, s) },
+  "4x7": { rhyme: "Четыре недели — двадцать восемь дней", note: "В феврале ровно 4 недели — 28 дней", pic: () => PIC.calendar(4, "Февраль: 4 недели по 7 дней") },
+  "7x7": { rhyme: "Семью семь — сорок девять, это знают даже лебеди", note: "7 недель по 7 дней — 49 дней", pic: () => PIC.calendar(7, "7 недель по 7 дней") },
+  "7x8": { rhyme: "Пять, шесть, семь, восемь: 56 = 7 × 8", note: "Цифры идут по порядку", pic: (s) => dots(7, 8, s) },
+  "3x8": { rhyme: "Три паука по восемь лап — двадцать четыре лапы", note: "А ещё в сутках 24 часа", pic: () => PIC.spiders() },
+  "8x8": { rhyme: "Восемью восемь — шестьдесят четыре, столько клеток в шахматном мире", note: "Шахматная доска — 8 рядов по 8 клеток", pic: () => PIC.chess() },
+};
+
+const memoFor = (a, b) => MEMO[`${Math.min(a, b)}x${Math.max(a, b)}`];
+const HARD = ["6x7", "6x8", "7x7", "7x8", "8x8"];
+const memosOf = (n) => HARD.filter((key) => key.split("x").map(Number).includes(n));
+
+function rule(t, k) {
+  const r = t * k;
+  if (k === 1) return { title: "Умножить на 1 — число не меняется", steps: [`${t} × 1 = ${r}`] };
+  if (k === 10) return { title: "Умножить на 10 — припиши ноль", steps: [`${t} → ${r}`] };
+  if ([6, 7, 8].includes(t) && k >= 2 && k <= 5) {
+    const inner = rule(k, t);
+    return { title: `Поменяй местами: ${k} × ${t}`, sub: inner.title, steps: inner.steps, table: k, mult: t };
+  }
+  switch (t) {
+    case 1: return { title: "Умножить на 1 — число не меняется", steps: [`1 × ${k} = ${r}`] };
+    case 2: return { title: "Удвой: сложи число с самим собой", steps: [`${k} + ${k} = ${r}`] };
+    case 3: return { title: "Удвой и прибавь ещё одно", steps: [`${k} + ${k} = ${2 * k}`, `${2 * k} + ${k} = ${r}`] };
+    case 4: return { title: "Удвой два раза", steps: [`${k} + ${k} = ${2 * k}`, `${2 * k} + ${2 * k} = ${r}`] };
+    case 5: return { title: "Умножь на 10 и раздели пополам", steps: [`${k} × 10 = ${10 * k}`, `${10 * k} : 2 = ${r}`] };
+    case 6:
+      if (k % 2 === 0 && k <= 8)
+        return { title: "Чётное: десятки — половина, единицы — само число", steps: [`половина от ${k} = ${k / 2}`, `${k / 2} и ${k} → ${r}`] };
+      return { title: "Умножь на 5 и прибавь ещё одно", steps: [`${k} × 5 = ${5 * k}`, `${5 * k} + ${k} = ${r}`] };
+    case 7: return { title: "Раздели 7 на 5 и 2", steps: [`${k} × 5 = ${5 * k}`, `${k} × 2 = ${2 * k}`, `${5 * k} + ${2 * k} = ${r}`] };
+    case 8: return { title: "Удвой три раза", steps: [`${k} → ${2 * k}`, `${2 * k} → ${4 * k}`, `${4 * k} → ${r}`] };
+    case 9: return { title: "Умножь на 10 и отними одно", steps: [`${k} × 10 = ${10 * k}`, `${10 * k} − ${k} = ${r}`] };
+    case 10: return { title: "Умножить на 10 — припиши ноль", steps: [`${k} → ${r}`] };
+  }
+}
+
+function hiddenSteps(steps, answer) {
+  const last = steps[steps.length - 1];
+  const i = last.lastIndexOf(String(answer));
+  return [...steps.slice(0, -1), last.slice(0, i) + "?" + last.slice(i + String(answer).length)];
+}
+
+const EASY_FIRST = [10, 1, 2, 5, 9, 4, 3, 8, 6, 7];
+function hintFor(a, b, ownTable) {
+  let t = a, k = b;
+  if (!ownTable && EASY_FIRST.indexOf(b) < EASY_FIRST.indexOf(a)) [t, k] = [b, a];
+  const r = rule(t, k);
+  const m = memoFor(a, b);
+  return { ...r, memo: m && m.rhyme, note: m && m.note, pic: (showTotal) => (m ? m.pic(showTotal) : r.table ? dots(r.table, r.mult, showTotal) : dots(t, k, showTotal)), flipped: t !== a };
+}
+
+const store = {
+  get(n) { try { return Number(localStorage.getItem("stars-" + n)) || 0; } catch { return 0; } },
+  set(n, v) { try { if (v > store.get(n)) localStorage.setItem("stars-" + n, v); } catch {} },
+};
+
+const app = document.getElementById("app");
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const stars = (n, cls = "") => `<span class="${cls}">${"★".repeat(n)}<span class="off">${"★".repeat(3 - n)}</span></span>`;
+
+function home() {
+  app.innerHTML = `
+    <h1>Таблица умножения</h1>
+    <p class="lead">Выбери число — посмотри правила и проверь себя.</p>
+    <div class="numbers">
+      ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `
+        <button class="num" data-n="${n}" aria-label="Число ${n}">
+          <span class="digit">${n}</span>
+          <span class="stars">${store.get(n) ? stars(store.get(n)) : ""}</span>
+        </button>`).join("")}
+    </div>
+    <button class="mixed" id="mixed">Всё вперемешку ${store.get("mix") ? stars(store.get("mix"), "stars") : ""}</button>`;
+  app.querySelectorAll(".num").forEach((b) => (b.onclick = () => go(`#/n/${b.dataset.n}`)));
+  document.getElementById("mixed").onclick = () => go("#/test/mix");
+}
+
+function numberPage(n) {
+  const [main, ...more] = TABLES[n].tips;
+  const hard = memosOf(n);
+  app.innerHTML = `
+    <div class="topbar"><button class="back" aria-label="Назад">←</button><h1>Умножаем на ${n}</h1></div>
+    <div class="tip big"><b>${esc(main[0])}</b><div class="ex">${esc(main[1])}</div></div>
+    <div class="actions"><button class="btn main" data-start>Проверь себя</button></div>
+    ${more.length ? `<details class="more"><summary>Ещё ${more.length === 1 ? "способ" : "способы"}</summary>
+      ${more.map(([h, ex]) => `<div class="tip"><b>${esc(h)}</b><div class="ex">${esc(ex)}</div></div>`).join("")}
+    </details>` : ""}
+    ${hard.length ? `<h2>Трудные — запомни</h2>` + hard.map((key) => {
+      const [a, b] = key.split("x").map(Number), m = MEMO[key];
+      const [x, y] = a === n ? [a, b] : [b, a];
+      return `<div class="tip memo"><b class="fact">${x} × ${y} = ${x * y}</b><div class="rhyme">${esc(m.rhyme)}</div>${m.pic(true)}</div>`;
+    }).join("") : ""}
+    <h2>Весь столбик</h2>
+    <p class="lead">Нажми на пример — покажу, как его посчитать.</p>
+    <div class="rows">
+      ${Array.from({ length: 10 }, (_, i) => i + 1).map((k) => {
+        const h = hintFor(n, k, true);
+        return `<button class="row" aria-expanded="false"><span class="fact">${n} × ${k} = ${n * k}</span>
+          <span class="how">${esc(h.title)}<br>${esc(h.steps.join(", "))}</span></button>`;
+      }).join("")}
+    </div>
+    <div class="actions"><button class="btn main" data-start>Проверь себя</button></div>`;
+  app.querySelector(".back").onclick = () => history.back();
+  app.querySelectorAll("[data-start]").forEach((b) => (b.onclick = () => go(`#/test/${n}`)));
+  app.querySelectorAll(".row").forEach((r) => (r.onclick = () => r.setAttribute("aria-expanded", r.getAttribute("aria-expanded") === "false")));
+  window.scrollTo(0, 0);
+}
+
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function makeQuestions(key) {
+  if (key === "mix") {
+    const all = [];
+    for (let a = 2; a <= 9; a++) for (let b = 2; b <= 9; b++) all.push([a, b]);
+    return shuffle(all).slice(0, 15);
+  }
+  const n = Number(key);
+  return shuffle(Array.from({ length: 10 }, (_, i) => [n, i + 1]));
+}
+
+function test(key) {
+  const own = key !== "mix";
+  const qs = makeQuestions(key);
+  const results = qs.map(() => null);
+  const mistakes = [];
+  let i = 0, typed = "", hintLevel = 0, state = "ask";
+
+  function render() {
+    const [a, b] = qs[i];
+    const h = hintFor(a, b, own);
+    const answerCls = state === "right" ? "right" : state === "wrong" ? "wrong" : typed ? "" : "empty";
+    const steps = state === "wrong" ? h.steps : hiddenSteps(h.steps, a * b);
+    let hintHtml = "";
+    if (state === "wrong" || hintLevel > 0) {
+      const open = state === "wrong" ? 3 : hintLevel;
+      hintHtml = `<div class="hint">
+        <b>${esc(h.title)}</b>
+        ${h.sub ? `<div>${esc(h.sub)}</div>` : ""}
+        ${open > 1 ? steps.map((s) => `<div class="step">${esc(s)}</div>`).join("") : ""}
+        ${open > 2 && h.memo ? `<div class="rhyme">${esc(h.memo)}</div>` : ""}
+        ${open > 2 ? h.pic(state === "wrong") : ""}
+      </div>`;
+    }
+    const feedback = state === "right" ? `<span class="yay">Верно!</span>`
+      : state === "wrong" ? `<span class="fix">Правильно: ${a} × ${b} = ${a * b}</span>` : "";
+
+    app.innerHTML = `
+      <div class="topbar"><button class="back" aria-label="Назад">←</button><h1>${own ? `Тест на ${key}` : "Вперемешку"}</h1></div>
+      <div class="progress">${qs.map((_, j) => `<i class="${results[j] === true ? "ok" : results[j] === false ? "bad" : j === i ? "now" : ""}"></i>`).join("")}</div>
+      <div class="question">${a} × ${b} = <span class="answer ${answerCls}">${typed || "?"}</span></div>
+      <div class="feedback">${feedback}</div>
+      ${hintHtml}
+      ${state === "ask" ? `
+        <div class="pad">
+          ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => `<button class="key" data-d="${d}">${d}</button>`).join("")}
+          <button class="key" data-del aria-label="Стереть">⌫</button>
+          <button class="key" data-d="0">0</button>
+          <button class="key go" data-ok ${typed ? "" : "disabled"} aria-label="Проверить">✓</button>
+        </div>
+        <div class="actions"><button class="btn" id="hint">${["Подсказка", "Ещё подсказка", "Покажи картинку", "Подсказка открыта"][hintLevel]}</button></div>`
+      : `<div class="actions"><button class="btn main" id="next">${i === qs.length - 1 ? "Результат" : "Дальше"}</button></div>`}`;
+
+    app.querySelector(".back").onclick = () => history.back();
+    app.querySelectorAll("[data-d]").forEach((k) => (k.onclick = () => { if (typed.length < 3) { typed += k.dataset.d; render(); } }));
+    const del = app.querySelector("[data-del]");
+    if (del) del.onclick = () => { typed = typed.slice(0, -1); render(); };
+    const ok = app.querySelector("[data-ok]");
+    if (ok) ok.onclick = check;
+    const hb = document.getElementById("hint");
+    if (hb) hb.onclick = () => { if (hintLevel < 3) { hintLevel++; render(); } };
+    const nx = document.getElementById("next");
+    if (nx) nx.onclick = next;
+  }
+
+  function check() {
+    const [a, b] = qs[i];
+    const right = Number(typed) === a * b;
+    results[i] = right && hintLevel === 0 ? true : right ? "hint" : false;
+    if (!right) mistakes.push([a, b]);
+    state = right ? "right" : "wrong";
+    render();
+    if (right) setTimeout(() => { if (state === "right") next(); }, 900);
+  }
+
+  function next() {
+    if (i === qs.length - 1) return finish();
+    i++; typed = ""; hintLevel = 0; state = "ask";
+    render();
+  }
+
+  function finish() {
+    const clean = results.filter((r) => r === true).length;
+    const ratio = clean / qs.length;
+    const s = ratio === 1 ? 3 : ratio >= 0.8 ? 2 : ratio >= 0.5 ? 1 : 0;
+    store.set(key, s);
+    const praise = s === 3 ? "Отлично! Без единой ошибки." : s === 2 ? "Хорошо! Чуть-чуть потренируйся." : s === 1 ? "Неплохо. Повтори правила и попробуй ещё." : "Посмотри правила и попробуй снова.";
+    app.innerHTML = `
+      <div class="topbar"><button class="back" aria-label="Назад">←</button><h1>Результат</h1></div>
+      <div class="result">
+        <div class="score">${clean} из ${qs.length}</div>
+        <div class="bigstars">${stars(s)}</div>
+        <p>${praise}${results.some((r) => r === "hint") ? " Ответы с подсказкой звёзд не дают." : ""}</p>
+      </div>
+      ${mistakes.length ? `<div class="mistakes"><h2>Повтори</h2>${[...new Map(mistakes.map((m) => [m.join("x"), m])).values()].map(([a, b]) => {
+        const h = hintFor(a, b, own);
+        return `<div class="row"><span class="fact">${a} × ${b} = ${a * b}</span><span class="how">${esc(h.memo || h.title + ": " + h.steps.join(", "))}</span></div>`;
+      }).join("")}</div>` : ""}
+      <div class="actions">
+        <button class="btn" id="home">Все числа</button>
+        <button class="btn main" id="again">Ещё раз</button>
+      </div>`;
+    app.querySelector(".back").onclick = () => history.back();
+    document.getElementById("home").onclick = () => go("#/", true);
+    document.getElementById("again").onclick = () => test(key);
+  }
+
+  render();
+  window.scrollTo(0, 0);
+}
+
+function go(hash, replace) {
+  if (replace) location.replace(hash); else location.hash = hash;
+}
+
+function route() {
+  const [, page, arg] = location.hash.replace(/^#\/?/, "#/").split("/");
+  if (page === "n" && TABLES[arg]) return numberPage(Number(arg));
+  if (page === "test" && (arg === "mix" || TABLES[arg])) return test(arg);
+  home();
+}
+
+window.addEventListener("hashchange", route);
+route();
+</script>
+</body>
+</html>
